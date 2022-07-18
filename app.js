@@ -82,9 +82,10 @@ app.route('/:id')
 
             repliesToComments = []
 
-            for (const comment of post.comments) {
-                console.log("COMMENT:",comment)
+            console.log('post.comments')
+            console.log(post.comments)
 
+            for (const comment of post.comments) {
                 const agg = (await aggregateQuery(comment._id))[0]
 
                 let replyComments = []
@@ -92,18 +93,23 @@ app.route('/:id')
                 const replyList = await loadReplies(agg, replyComments, 1)
 
                 delay(1000).then(() => {
-                    console.log(replyList)
-
-                    repliesToComments.push(replyList)
+                    if (!replyList) {
+                        repliesToComments.push(null)
+                    } else {
+                        repliesToComments.push(replyList)
+                    }
                 })
             }
 
             
 
             delay(5000).then(() => {
-                for (let replyList of repliesToComments) {
-                    console.log(replyList)
-                }
+                // for (let replyList of repliesToComments) {
+                //     console.log(replyList)
+                // }
+                
+                console.log('repliesToComments')
+                console.log(repliesToComments)
                 res.render('posts/show', { post, repliesToComments })
             })
 
@@ -192,7 +198,6 @@ const loadReplies = async (agg, replyComments, i) => {
     i++
 
     for (const reply of agg.replies) {
-        console.log(reply)
         replyObject = {
             _id: reply._id,
             parent: reply.parent,
@@ -202,8 +207,6 @@ const loadReplies = async (agg, replyComments, i) => {
             // console.log()
             depth: i,
         }
-
-        console.log(replyObject)
 
         replyComments.push(replyObject)
 
@@ -231,7 +234,6 @@ app.route('/:id/:comment_id/')
             const replyList = await loadReplies(agg, replyComments, 1)
 
             delay(1000).then(() => {
-                console.log('REPLY COMMENTS', replyList)
                 res.render('comments/show', { post, rootComment, replyList })
             })
         })

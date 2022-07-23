@@ -1,17 +1,21 @@
-<div class="container mx-auto px-4 py-4 my-8">
+<div class="container mx-auto my-1">
     <div class="ml-<%=reply.depth * 12%> border-2 px-4 py-4 w-100">
-        <p><b>Username</b></p>
+        <p><b>Username</b> • <%= dayjs(reply.createdAt).fromNow() %></p>
         <p class="mb-2"><%= reply.text %></p>
 
-        <div class="flex w-max">
-            <button id="upvote=<%= reply._id %>" class="upvoteComment block"><i class="text-red-600 fa-2xl fa-solid fa-arrow-up"></i></button>
-            <span class="mx-2" id="commentScore=<%= reply._id %>"><%= reply.upvotes - reply.downvotes %></span>
-            <button id="downvote=<%= reply._id %>" class="downvoteComment block"><i class="text-blue-600 fa-2xl fa-solid fa-arrow-down"></i></button>
+        <div class="flex">
+            <div class="flex w-min inline-block">
+                <button id="upvote=<%= reply._id %>" class="upvoteComment block"><i class="text-gray-500 fa-xl fa-solid fa-arrow-up"></i></button>
+                <span class="mx-2" id="commentScore=<%= reply._id %>"><%= reply.upvotes - reply.downvotes %></span>
+                <button id="downvote=<%= reply._id %>" class="downvoteComment block"><i class="text-gray-500 fa-xl fa-solid fa-arrow-down"></i></button>
+            </div>
+            
+            <div class="inline-block ml-3">
+                <a class="hover:bg-gray-200 inline-block px-2" href="/<%=post._id%>/<%=reply._id%>">View</a>
+                <form class="hover:bg-gray-200 inline-block px-2" method="POST" action="/<%= post._id %>/<%=reply._id%>?_method=DELETE">
+                    <button>Delete</button>
+                </form>
+            </div>
         </div>
-        
-        <a class="inline-block mt-2 bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" href="/<%=post._id%>/<%=reply._id%>">View</a>
-        <form class="inline-block" method="POST" action="/<%= post._id %>/<%=reply._id%>?_method=DELETE">
-            <button class="mt-2 bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-4 border border-red-500 hover:border-transparent rounded">Delete</button>
-        </form>
     </div>
 </div>

@@ -3,9 +3,9 @@
 <%- include('../partials/post', {post}) %>
 
 
-<div class="container mx-auto px-4 py-4 border-2 mt-8">
+<div class="container mx-auto px-4 py-4 border-2 my-4">
     <form method="POST" action="/<%= post._id %>">
-        <div class="my-6">
+        <div class="mb-2">
             <label for="comment" class="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-300">Post Text</label>
             <textarea required name="comment" id="comment" class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 sm:text-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" name="large-input" id="" cols="30" rows="5"></textarea>
         </div>

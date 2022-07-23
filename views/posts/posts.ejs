@@ -1,7 +1,9 @@
 <% layout('layouts/boilerplate') %>
 
-<% for (let post of posts) { %> 
-    <%- include('../partials/post', {post}) %>
-<% } %>
+<section class="my-8">
+    <% for (let post of posts) { %> 
+        <%- include('../partials/post', {post, dayjs}) %>
+    <% } %>
+</section>
 
 <script src="js/posts.js"></script>

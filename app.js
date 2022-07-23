@@ -4,6 +4,9 @@ const path = require('path')
 const ejsMate = require('ejs-mate')
 const mongoose = require('mongoose')
 const bodyParser = require('body-parser')
+const relativeTime = require('dayjs/plugin/relativeTime')
+const dayjs = require('dayjs')
+dayjs.extend(relativeTime)
 
 const Post = require('./models/post')
 const Comment = require('./models/comment')
@@ -41,7 +44,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 
 app.get('/', async (req, res) => {
     const posts = await Post.find({})
-    res.render('posts/posts', { posts })
+    res.render('posts/posts', { posts, dayjs })
 })
 
 app.route('/submit')
@@ -85,7 +88,7 @@ app.route('/:id')
                 })
             }
 
-            res.render('posts/show', { post, repliesToComments })
+            res.render('posts/show', { post, repliesToComments, dayjs })
         })
     )
 

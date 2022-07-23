@@ -11,7 +11,7 @@ const Comment = require('./models/comment')
 const catchAsync = require('./utils/catchAsync')
 const ExpressError = require('./utils/ExpressError')
 const { postSchema } = require('./schemas')
-const { findById } = require('./models/post')
+// const { findById } = require('./models/post')
 
 const app = express()
 
@@ -37,28 +37,12 @@ app.set('views', path.join(__dirname, 'views'))
 app.use(express.urlencoded({ extended: true }))
 app.use(methodOverride('_method'))
 app.use(express.static(path.join(__dirname, 'public')))
-// app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({extended: false}))
+app.use(bodyParser.urlencoded({ extended: false }))
 
 app.get('/', async (req, res) => {
     const posts = await Post.find({})
     res.render('posts/posts', { posts })
 })
-
-// app.post('/:id/upvote2', async function(req, res) {
-//     // res.send('AHHHH')
-//     console.log('AHHHHHH')
-// })
-
-
-
-app.route('/ajax')
-    .get(function(req, res) {
-        res.render('ajax', {quote: 'AJAX is great!'})
-    })
-    .post(function(req, res) {
-        res.send({response: req.body.quote})
-    })
 
 app.route('/submit')
     .get((req, res) => {
@@ -122,55 +106,67 @@ app.route('/:id')
         })
     )
 
+app.post('/post/:id/upvote', async (req, res) => {
+    const post = await Post.findById(req.params.id)
+
+    post.upvotes++
+
+    await post.save().then(() => {
+        res.json({ post })
+    })
+})
+
+app.post('/post/:id/downvote', async (req, res) => {
+    const post = await Post.findById(req.params.id)
+
+    post.downvotes++
+
+    await post.save().then(() => {
+        res.json({ post })
+    })
+})
+
 app.post('/:id/comment/:comment_id/upvote', async (req, res) => {
     const comment = await Comment.findById(req.params.comment_id)
-    // console.log(comment)
 
     comment.upvotes++
+
+    // after database updates, send comment to jQuery in JSON format
     await comment.save().then(() => {
-        res.json({comment})
+        res.json({ comment })
     })
 })
 
 app.post('/:id/comment/:comment_id/downvote', async (req, res) => {
     const comment = await Comment.findById(req.params.comment_id)
-    // console.log(comment)
 
     comment.downvotes++
     await comment.save().then(() => {
-        res.json({comment})
+        res.json({ comment })
     })
 })
 
-app.post('/:id/upvote', catchAsync(async (req, res) => {
-    const post = await Post.findById(req.params.id)
-    post.upvotes++;
-    await post.save().then(() => {
-        res.json({post})
+app.post(
+    '/:id/upvote',
+    catchAsync(async (req, res) => {
+        const post = await Post.findById(req.params.id)
+        post.upvotes++
+        await post.save().then(() => {
+            res.json({ post })
+        })
     })
-    // console.log(`Upvoted post ${post._id}`)
-}))
+)
 
-app.post('/:id/downvote', catchAsync(async (req, res) => {
-    const post = await Post.findById(req.params.id)
-    post.downvotes++;
-    await post.save().then(() => {
-        res.json({post})
+app.post(
+    '/:id/downvote',
+    catchAsync(async (req, res) => {
+        const post = await Post.findById(req.params.id)
+        post.downvotes++
+        await post.save().then(() => {
+            res.json({ post })
+        })
     })
-    // console.log(`Upvoted post ${post._id}`)
-}))
-
-// app.post(
-//     '/:id/downvote',
-//     catchAsync(async (req, res) => {
-//         const post = await Post.findById(req.params.id)
-//         post.downvotes++
-//         post.save()
-//         if (post) {
-//             res.redirect(`/${post._id}`)
-//         }
-//     })
-// )
+)
 
 app.post(
     '/:id/:comment_id/upvote',
@@ -247,9 +243,7 @@ app.route('/:id/:comment_id/')
 
             let replyComments = []
 
-            const replyList = await loadReplies(agg, replyComments, 1)
-
-            delay(1000).then(() => {
+            await loadReplies(agg, replyComments, 1).then(replyList => {
                 res.render('comments/show', { post, rootComment, replyList })
             })
         })
@@ -289,9 +283,6 @@ app.route('/:id/:comment_id/')
         })
     )
 
-// app.get('*', (req, res) => {
-//     next(new ExpressError('Page not Found', 404))
-// })
 
 app.use((err, req, res, next) => {
     const { statusCode = 500 } = err

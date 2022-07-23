@@ -3,6 +3,7 @@ const express = require('express')
 const path = require('path')
 const ejsMate = require('ejs-mate')
 const mongoose = require('mongoose')
+const bodyParser = require('body-parser')
 
 const Post = require('./models/post')
 const Comment = require('./models/comment')
@@ -36,11 +37,28 @@ app.set('views', path.join(__dirname, 'views'))
 app.use(express.urlencoded({ extended: true }))
 app.use(methodOverride('_method'))
 app.use(express.static(path.join(__dirname, 'public')))
+// app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({extended: false}))
 
 app.get('/', async (req, res) => {
     const posts = await Post.find({})
     res.render('posts/posts', { posts })
 })
+
+// app.post('/:id/upvote2', async function(req, res) {
+//     // res.send('AHHHH')
+//     console.log('AHHHHHH')
+// })
+
+
+
+app.route('/ajax')
+    .get(function(req, res) {
+        res.render('ajax', {quote: 'AJAX is great!'})
+    })
+    .post(function(req, res) {
+        res.send({response: req.body.quote})
+    })
 
 app.route('/submit')
     .get((req, res) => {
@@ -49,7 +67,6 @@ app.route('/submit')
 
     .post(
         catchAsync(async (req, res) => {
-            // res.send('POSTED')
             const post = new Post(req.body.post)
             post.title = req.body.title
             post.text = req.body.text
@@ -59,20 +76,8 @@ app.route('/submit')
     )
 
 app.route('/:id')
-    // .get(
-    //     catchAsync(async (req, res) => {
-    //         const post = await Post.findById(req.params.id).populate({ path: 'comments' })
-    //         if (!post) {
-    //             console.log('Cannot find that post!')
-    //             return res.redirect('/')
-    //         }
-    //         res.render('posts/show', { post })
-    //     })
-    // )
     .get(
         catchAsync(async (req, res) => {
-            // const post = await Post.findById(req.params.id)
-
             const post = await Post.findById(req.params.id).populate({ path: 'comments' })
 
             if (!post) {
@@ -82,17 +87,12 @@ app.route('/:id')
 
             repliesToComments = []
 
-            console.log('post.comments')
-            console.log(post.comments)
-
             for (const comment of post.comments) {
                 const agg = (await aggregateQuery(comment._id))[0]
 
                 let replyComments = []
 
-                const replyList = await loadReplies(agg, replyComments, 1)
-
-                delay(1000).then(() => {
+                await loadReplies(agg, replyComments, 1).then(replyList => {
                     if (!replyList) {
                         repliesToComments.push(null)
                     } else {
@@ -101,27 +101,7 @@ app.route('/:id')
                 })
             }
 
-            
-
-            delay(5000).then(() => {
-                // for (let replyList of repliesToComments) {
-                //     console.log(replyList)
-                // }
-                
-                console.log('repliesToComments')
-                console.log(repliesToComments)
-                res.render('posts/show', { post, repliesToComments })
-            })
-
-            // res.render('posts/show', { post, rootComments })
-
-            // let replyComments = []
-            // const replyList = await loadReplies(agg, replyComments, 1)
-
-            // delay(1000).then(() => {
-            //     console.log('REPLY COMMENTS', replyList)
-            //     res.render('posts/show', { post, rootComments, replyList })
-            // })
+            res.render('posts/show', { post, repliesToComments })
         })
     )
 
@@ -142,23 +122,61 @@ app.route('/:id')
         })
     )
 
+app.post('/:id/comment/:comment_id/upvote', async (req, res) => {
+    const comment = await Comment.findById(req.params.comment_id)
+    // console.log(comment)
+
+    comment.upvotes++
+    await comment.save().then(() => {
+        res.json({comment})
+    })
+})
+
+app.post('/:id/comment/:comment_id/downvote', async (req, res) => {
+    const comment = await Comment.findById(req.params.comment_id)
+    // console.log(comment)
+
+    comment.downvotes++
+    await comment.save().then(() => {
+        res.json({comment})
+    })
+})
+
+app.post('/:id/upvote', catchAsync(async (req, res) => {
+    const post = await Post.findById(req.params.id)
+    post.upvotes++;
+    await post.save().then(() => {
+        res.json({post})
+    })
+    // console.log(`Upvoted post ${post._id}`)
+}))
+
+app.post('/:id/downvote', catchAsync(async (req, res) => {
+    const post = await Post.findById(req.params.id)
+    post.downvotes++;
+    await post.save().then(() => {
+        res.json({post})
+    })
+    // console.log(`Upvoted post ${post._id}`)
+}))
+
+// app.post(
+//     '/:id/downvote',
+//     catchAsync(async (req, res) => {
+//         const post = await Post.findById(req.params.id)
+//         post.downvotes++
+//         post.save()
+//         if (post) {
+//             res.redirect(`/${post._id}`)
+//         }
+//     })
+// )
+
 app.post(
-    '/:id/upvote',
+    '/:id/:comment_id/upvote',
     catchAsync(async (req, res) => {
         const post = await Post.findById(req.params.id)
         post.upvotes++
-        post.save()
-        if (post) {
-            res.redirect(`/${post._id}`)
-        }
-    })
-)
-
-app.post(
-    '/:id/downvote',
-    catchAsync(async (req, res) => {
-        const post = await Post.findById(req.params.id)
-        post.downvotes++
         post.save()
         if (post) {
             res.redirect(`/${post._id}`)
@@ -188,8 +206,6 @@ const aggregateQuery = root_id => {
 
     return aggregateQuery
 }
-
-const loadComments = async agg => {}
 
 const loadReplies = async (agg, replyComments, i) => {
     if (agg.replies == 0) {

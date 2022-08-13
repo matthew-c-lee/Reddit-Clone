@@ -1,20 +1,23 @@
 <div class="container mx-auto my-1">
-    <div class="ml-<%=reply.depth * 12%> border-2 px-4 py-4 w-100">
-        <p><b>Username</b> • <%= dayjs(reply.createdAt).fromNow() %></p>
-        <p class="mb-2"><%= reply.text %></p>
+    <div id="comment=<%= reply._id %>" class="ml-<%=(reply.depth-1) * 12%>">
+        <div class="border-2 px-4 py-4 w-100">
+            <p><b>Username</b> • <%= dayjs(reply.createdAt).fromNow() %></p>
+            <p class="mb-2"><%= reply.text %></p>
 
-        <div class="flex">
-            <div class="flex w-min inline-block">
-                <button id="upvote=<%= reply._id %>" class="upvoteComment block"><i class="text-gray-500 fa-xl fa-solid fa-arrow-up"></i></button>
-                <span class="mx-2" id="commentScore=<%= reply._id %>"><%= reply.upvotes - reply.downvotes %></span>
-                <button id="downvote=<%= reply._id %>" class="downvoteComment block"><i class="text-gray-500 fa-xl fa-solid fa-arrow-down"></i></button>
-            </div>
-            
-            <div class="inline-block ml-3">
-                <a class="hover:bg-gray-200 inline-block px-2" href="/<%=post._id%>/<%=reply._id%>">View</a>
-                <form class="hover:bg-gray-200 inline-block px-2" method="POST" action="/<%= post._id %>/<%=reply._id%>?_method=DELETE">
-                    <button>Delete</button>
-                </form>
+            <div class="flex">
+                <div class="flex w-min inline-block">
+                    <button id="upvote=<%= reply._id %>" class="upvoteComment block"><i class="text-gray-500 fa-xl fa-solid fa-arrow-up"></i></button>
+                    <span class="mx-2" id="commentScore=<%= reply._id %>"><%= reply.upvotes - reply.downvotes %></span>
+                    <button id="downvote=<%= reply._id %>" class="downvoteComment block"><i class="text-gray-500 fa-xl fa-solid fa-arrow-down"></i></button>
+                </div>
+
+                <div class="inline-block ml-3">
+                    <a class="hover:bg-gray-200 inline-block px-1" href="/<%=post._id%>/<%=reply._id%>">View</a>
+                    <form class="hover:bg-gray-200 inline-block px-1" method="POST" action="/<%= post._id %>/<%=reply._id%>?_method=DELETE">
+                        <button>Delete</button>
+                    </form>
+                    <button id="viewReplyBox=<%= reply._id %>" class="viewReplyBox hover:bg-gray-200 inline-block px-1">Reply</button>
+                </div>
             </div>
         </div>
     </div>

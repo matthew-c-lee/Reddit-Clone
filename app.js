@@ -4,8 +4,9 @@ const path = require('path')
 const ejsMate = require('ejs-mate')
 const mongoose = require('mongoose')
 const bodyParser = require('body-parser')
-const relativeTime = require('dayjs/plugin/relativeTime')
+
 const dayjs = require('dayjs')
+const relativeTime = require('dayjs/plugin/relativeTime')
 dayjs.extend(relativeTime)
 
 const Post = require('./models/post')
@@ -95,7 +96,7 @@ app.route('/:id')
     .post(
         catchAsync(async (req, res) => {
             const post = await Post.findById(req.params.id)
-            const comment = await new Comment({ text: req.body.comment })
+            const comment = new Comment({ text: req.body.comment })
             comment.post_id = post._id
 
             // add comment to post
@@ -146,6 +147,27 @@ app.post('/:id/comment/:comment_id/downvote', async (req, res) => {
     comment.downvotes++
     await comment.save().then(() => {
         res.json({ comment })
+    })
+})
+
+app.post('/:id/comment/:comment_id', async (req, res) => {
+    // original comment
+    const comment = await Comment.findById(req.params.comment_id)
+    const post = await Post.findById(req.params.id)
+
+    console.log(req.body)
+    // reply:
+    const newComment = new Comment({
+        text: req.body.replyText,
+    })
+
+    newComment.parent = comment._id,
+    newComment.post_id = post._id,
+
+    console.log(newComment.createdAt)
+
+    await newComment.save().then(() => {
+        res.json({ newComment })
     })
 })
 
@@ -219,6 +241,9 @@ const loadReplies = async (agg, replyComments, i) => {
             text: reply.text,
             upvotes: reply.upvotes,
             downvotes: reply.downvotes,
+            createdAt: reply.createdAt,
+            updatedAt: reply.updatedAt,
+
             // console.log()
             depth: i,
         }
@@ -285,7 +310,6 @@ app.route('/:id/:comment_id/')
             res.redirect(`/${req.params.id}/${parent}`)
         })
     )
-
 
 app.use((err, req, res, next) => {
     const { statusCode = 500 } = err
